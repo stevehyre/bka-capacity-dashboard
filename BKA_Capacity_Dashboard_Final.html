@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BKA Capacity Dashboard · Housecall Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root { color-scheme: light; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f1f5f9; color: #0f172a; font-size: 14px; min-height: 100vh;
+}
+
+/* ── Header ── */
+.app-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  color: white; padding: 16px 22px;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.app-header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.header-sub { font-size: 11px; opacity: 0.7; margin-top: 3px; }
+.header-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.refresh-btn {
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+  color: white; font-size: 11px; padding: 5px 12px; border-radius: 6px;
+  cursor: pointer; transition: background 0.2s; font-weight: 500;
+}
+.refresh-btn:hover { background: rgba(255,255,255,0.28); }
+.updated-text { font-size: 10px; opacity: 0.65; display: flex; align-items: center; gap: 4px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
+.status-dot.live   { background: #4ade80; }
+.status-dot.cached { background: #fbbf24; }
+.status-dot.error  { background: #f87171; }
+
+/* ── Tabs ── */
+.tab-bar {
+  background: white; display: flex; border-bottom: 2px solid #e2e8f0;
+  padding: 0 20px; gap: 2px;
+}
+.tab {
+  padding: 10px 16px; cursor: pointer; font-size: 12.5px; font-weight: 500;
+  color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.15s; user-select: none; white-space: nowrap;
+}
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+.tab:hover:not(.active) { color: #334155; }
+
+/* ── Main ── */
+.main { padding: 18px 22px; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Panel 1: Org Cards ── */
+.org-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 14px; }
+.bka-card {
+  background: white; border-radius: 12px; padding: 16px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-left: 4px solid #cbd5e1;
+}
+.bka-card.healthy  { border-left-color: #16a34a; }
+.bka-card.stretched { border-left-color: #d97706; }
+.bka-card.critical { border-left-color: #dc2626; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.bka-name { font-size: 14.5px; font-weight: 700; }
+.bka-sub  { font-size: 10.5px; color: #64748b; margin-top: 2px; }
+.status-pill { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+.pill-healthy  { background: #dcfce7; color: #15803d; }
+.pill-stretched { background: #fef3c7; color: #b45309; }
+.pill-critical { background: #fee2e2; color: #b91c1c; }
+.org-big { font-size: 44px; font-weight: 800; line-height: 1; margin: 10px 0 2px; }
+.org-lbl { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+.cap-bar-wrap { margin: 13px 0 5px; }
+.cap-bar-bg { background: #e2e8f0; border-radius: 99px; height: 9px; overflow: hidden; }
+.cap-bar-fill { height: 100%; border-radius: 99px; transition: width 0.7s ease; }
+.cap-bar-fill.healthy  { background: linear-gradient(90deg, #4ade80, #16a34a); }
+.cap-bar-fill.stretched { background: linear-gradient(90deg, #fbbf24, #d97706); }
+.cap-bar-fill.critical { background: linear-gradient(90deg, #f87171, #dc2626); }
+.cap-bar-lbls { display: flex; justify-content: space-between; font-size: 9.5px; color: #94a3b8; margin-top: 4px; }
+.card-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-top: 12px; }
+.mini-s { background: #f8fafc; border-radius: 7px; padding: 7px 8px; text-align: center; }
+.mini-s .mv { font-size: 14px; font-weight: 700; }
+.mini-s .ml { font-size: 9.5px; color: #64748b; margin-top: 1px; }
+
+/* ── Panel 2: Time Model ── */
+.tm-layout { display: grid; grid-template-columns: 265px 1fr; gap: 18px; align-items: start; }
+.params-card {
+  background: white; border-radius: 12px; padding: 16px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07); position: sticky; top: 16px;
+}
+.params-title { font-size: 12.5px; font-weight: 700; margin-bottom: 14px; padding-bottom: 9px; border-bottom: 1px solid #f1f5f9; }
+.sec-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: #94a3b8; font-weight: 600; margin: 12px 0 8px; }
+.param-row { margin-bottom: 12px; }
+.param-lbl { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 500; color: #374151; margin-bottom: 5px; }
+.pbadge { background: #eff6ff; color: #1d4ed8; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; min-width: 50px; text-align: center; }
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 4px;
+  border-radius: 99px; background: #e2e8f0; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: #2563eb; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.util-list { display: flex; flex-direction: column; gap: 10px; }
+.util-card { background: white; border-radius: 12px; padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.util-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.util-name { font-size: 13.5px; font-weight: 700; }
+.util-sub { font-size: 10.5px; color: #64748b; margin-top: 2px; }
+.util-pct { font-size: 24px; font-weight: 800; line-height: 1; text-align: right; }
+.util-hrs { font-size: 10px; color: #64748b; margin-top: 2px; text-align: right; }
+.util-bar-bg { background: #e2e8f0; height: 5px; border-radius: 99px; overflow: hidden; margin-bottom: 11px; }
+.util-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.act-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.act-cell { background: #f8fafc; border-radius: 7px; padding: 7px 3px; text-align: center; }
+.act-icon { font-size: 13px; display: block; margin-bottom: 2px; }
+.act-ct { font-size: 12px; font-weight: 700; }
+.act-h  { font-size: 9.5px; color: #2563eb; font-weight: 600; }
+.act-lbl { font-size: 9px; color: #94a3b8; margin-top: 1px; }
+.model-insight {
+  background: #eff6ff; border-left: 3px solid #93c5fd; border-radius: 0 8px 8px 0;
+  padding: 10px 14px; font-size: 11px; color: #1e40af; line-height: 1.55; margin-top: 12px;
+}
+.divider { border: none; border-top: 1px solid #f1f5f9; margin: 10px 0; }
+.note-sm { font-size: 10px; color: #94a3b8; line-height: 1.5; margin-top: 12px; }
+
+/* ── Panel 3: Charts ── */
+.chart-card { background: white; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 16px; }
+.chart-card h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 3px; }
+.chart-card p  { font-size: 11px; color: #64748b; margin-bottom: 14px; line-height: 1.4; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #374151; }
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     DATA SOURCE — Apps Script Web App URL
+     ══════════════════════════════════════ -->
+<script>
+const WEBAPP_URL = 'https://script.google.com/a/macros/housecallpro.com/s/AKfycbwG7AFxmYZY_oSIWR2rk27894JyV-hitWXV3MDBC8ntAiVpSW83rTV-dCNBAZ3lNaNKCA/exec';
+</script>
+
+<!-- Header -->
+<div class="app-header">
+  <div>
+    <h1>📊 BKA Capacity Dashboard</h1>
+    <div class="header-sub">Housecall Pro · Bookkeeping Advisor Division</div>
+  </div>
+  <div class="header-right">
+    <button class="refresh-btn" onclick="loadFromWebApp()">⟳ Refresh</button>
+    <div class="updated-text">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="updatedText">Connecting to MBO…</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('org-load')">Org Load Status</div>
+  <div class="tab" onclick="switchTab('time-model')">⚙️ Activity Time Model</div>
+  <div class="tab" onclick="switchTab('trend')">📈 Monthly Trend</div>
+</div>
+
+<div class="main">
+
+  <!-- Panel 1 -->
+  <div id="panel-org-load" class="panel active">
+    <div class="org-grid" id="orgGrid"></div>
+  </div>
+
+  <!-- Panel 2 -->
+  <div id="panel-time-model" class="panel">
+    <div class="tm-layout">
+      <div class="params-card">
+        <div class="params-title">⚙️ Time Per Activity</div>
+        <div class="sec-lbl">Calls &amp; Meetings</div>
+        <div class="param-row">
+          <div class="param-lbl">📞 Genesys call (connected)<span class="pbadge" id="b-call">10 min</span></div>
+          <input type="range" min="5" max="60" value="10" oninput="setParam('call',+this.value)">
+        </div>
+        <div class="param-row">
+          <div class="param-lbl">🎥 Zoom / Demo<span class="pbadge" id="b-demo">45 min</span></div>
+          <input type="range" min="15" max="90" value="45" oninput="setParam('demo',+this.value)">
+        </div>
+        <div class="sec-lbl">Email</div>
+        <div class="param-row">
+          <div class="param-lbl">✉️ Non-bulk email<span class="pbadge" id="b-email">5 min</span></div>
+          <input type="range" min="1" max="30" value="5" oninput="setParam('email',+this.value)">
+        </div>
+        <div class="param-row">
+          <div class="param-lbl">📧 Bulk / auto email<span class="pbadge" id="b-bulkEmail">1 min</span></div>
+          <input type="range" min="0" max="10" value="1" oninput="setParam('bulkEmail',+this.value)">
+        </div>
+        <div class="param-row">
+          <div class="param-lbl">% of emails that are bulk<span class="pbadge" id="b-bulkPct">30%</span></div>
+          <input type="range" min="0" max="100" value="30" oninput="setParam('bulkPct',this.value/100)">
+        </div>
+        <div class="sec-lbl">Other Channels</div>
+        <div class="param-row">
+          <div class="param-lbl">📱 Text / SMS<span class="pbadge" id="b-text">2 min</span></div>
+          <input type="range" min="1" max="15" value="2" oninput="setParam('text',+this.value)">
+        </div>
+        <div class="param-row">
+          <div class="param-lbl">💬 Chat (Intercom)<span class="pbadge" id="b-chat">20 min</span></div>
+          <input type="range" min="5" max="60" value="20" oninput="setParam('chat',+this.value)">
+        </div>
+        <hr class="divider">
+        <div class="note-sm">Activity counts from MBO Salesforce.<br>Auto-refreshed every Monday 7am CT.</div>
+      </div>
+      <div>
+        <div class="util-list" id="utilList"></div>
+        <div class="model-insight">
+          <strong>💡 Key insight:</strong> Chat (Intercom) is the highest-leverage assumption — at 20 min/chat it can exceed call time for high-volume BKAs. Genesys analysis: avg connected = 6.6 min + ~3.4 min overhead = 10 min effective. Zoom fixed at 45 min per standard.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 3 -->
+  <div id="panel-trend" class="panel">
+    <div class="chart-card">
+      <h3>Pro-Facing Hours Per Month — Last 6 Months</h3>
+      <p>Dashed lines = capacity budgets (paired BAs: 124.7h · Mauricio solo: 63.9h). May 2026* is month-to-date.</p>
+      <canvas id="trendChart" height="290"></canvas>
+      <div class="legend-row" id="trendLegend"></div>
+    </div>
+    <div class="chart-card">
+      <h3>Current Org Load vs. Capacity Bands</h3>
+      <p>Color = current status · Dashed line = 80% healthy threshold per BKA type</p>
+      <canvas id="orgChart" height="230"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// STATIC FALLBACK (shown while loading)
+// ═══════════════════════════════════
+const MONTHS = ['Dec 2025','Jan 2026','Feb 2026','Mar 2026','Apr 2026','May 2026*'];
+
+let BKAS = [
+  { name:'Kandyse Bertrand',      manager:'Karen', type:'Paired BA',           orgs:255, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371, last30d:{calls:55,demos:43,emails:142,texts:31,chats:74},  monthlyHours:[102.9,61.5,64.7,61.0,79.8,24.7], color:'#3b82f6' },
+  { name:'Lisa Horner',           manager:'Karen', type:'Paired BA',           orgs:245, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371, last30d:{calls:35,demos:25,emails:242,texts:76,chats:95},  monthlyHours:[74.5,100.6,112.9,133.9,148.4,69.3], color:'#16a34a' },
+  { name:'Soraya Volcy',          manager:'Judy',  type:'Paired BA',           orgs:270, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371, last30d:{calls:44,demos:25,emails:322,texts:2, chats:108}, monthlyHours:[18.7,48.6,21.3,33.0,37.8,65.9],  color:'#a855f7' },
+  { name:'Caleb Wireman',         manager:'Judy',  type:'Paired BA',           orgs:195, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371, last30d:{calls:27,demos:12,emails:32, texts:28,chats:48},  monthlyHours:[15.5,22.9,38.7,20.8,20.1,40.5],  color:'#f97316' },
+  { name:'Caitlin McManus',       manager:'Judy',  type:'Paired BA',           orgs:175, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371, last30d:{calls:47,demos:15,emails:308,texts:36,chats:102}, monthlyHours:[57.9,64.8,38.2,36.1,64.8,55.7],  color:'#14b8a6' },
+  { name:'Mauricio Pantoja Ramon',manager:'Karen', type:'Solo w/ team mgmt',   orgs:167, proHoursMax:63.9,  healthyMax:132, stretchedMax:165, criticalAt:190, last30d:{calls:41,demos:18,emails:122,texts:11,chats:57},  monthlyHours:[2.5,45.4,27.8,64.2,38.5,16.9],   color:'#ef4444' }
+];
+
+const params = { call:10, demo:45, email:5, bulkEmail:1, bulkPct:0.30, text:2, chat:20 };
+let trendChart = null, orgChart = null;
+
+// ═══════════════════════════
+// LIVE DATA — Apps Script Web App
+// ═══════════════════════════
+async function loadFromWebApp() {
+  setStatus('loading', 'Connecting to MBO…');
+  try {
+    const resp = await fetch(WEBAPP_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const jsonData = await resp.json();
+
+    if (!jsonData || !jsonData.bkas) throw new Error('Unexpected response format');
+
+    applyDashboardData(jsonData);
+    setStatus('live', 'Live · Updated: ' + jsonData.lastUpdated + ' CT');
+
+  } catch(err) {
+    console.warn('Web App fetch error:', err.message);
+    setStatus('cached', 'Cached data · ' + err.message);
+  }
+}
+
+function applyDashboardData(jsonData) {
+  BKAS.forEach(bka => {
+    const entry = jsonData.bkas[bka.name];
+    if (!entry || !entry.months) return;
+
+    const keys   = Object.keys(entry.months).sort();
+    const recent = keys.slice(-2);
+    let calls=0, demos=0, emails=0, texts=0, chats=0;
+
+    recent.forEach(k => {
+      const m = entry.months[k];
+      if (!m) return;
+      calls  += (m.calls_connected || 0);
+      demos  += (m.demos_attended  || 0);
+      emails += (m.emails_bulk     || 0) + (m.emails_nonbulk || 0);
+      texts  += (m.texts           || 0);
+      chats  += (m.chats           || 0);
+    });
+
+    const n = recent.length || 1;
+    bka.last30d = {
+      calls:  Math.round(calls  / n),
+      demos:  Math.round(demos  / n),
+      emails: Math.round(emails / n),
+      texts:  Math.round(texts  / n),
+      chats:  Math.round(chats  / n)
+    };
+  });
+
+  renderOrgCards();
+  renderUtilCards();
+}
+
+function setStatus(state, text) {
+  document.getElementById('statusDot').className = 'status-dot ' + (state === 'loading' ? 'cached' : state);
+  document.getElementById('updatedText').textContent = text;
+}
+
+// ═══════════════════════════
+// HELPERS
+// ═══════════════════════════
+function getStatus(bka) {
+  if (bka.orgs >= bka.stretchedMax) return 'critical';
+  if (bka.orgs >= bka.healthyMax)   return 'stretched';
+  return 'healthy';
+}
+const STATUS_LABELS = { healthy:'🟢 Healthy', stretched:'🟡 Stretched', critical:'🔴 Critical' };
+function calcHours(bka) {
+  const d = bka.last30d;
+  return +((d.calls*params.call + d.demos*params.demo + d.emails*(1-params.bulkPct)*params.email + d.emails*params.bulkPct*params.bulkEmail + d.texts*params.text + d.chats*params.chat) / 60).toFixed(1);
+}
+function utilColor(p) { return p >= 100 ? '#dc2626' : p >= 80 ? '#d97706' : '#16a34a'; }
+function fmt1(n) { return (Math.round(n*10)/10).toFixed(1); }
+
+// ═══════════════════════════
+// PANEL 1 — ORG CARDS
+// ═══════════════════════════
+function renderOrgCards() {
+  document.getElementById('orgGrid').innerHTML = BKAS.map(bka => {
+    const st = getStatus(bka);
+    const fp = Math.min(100, bka.orgs / bka.stretchedMax * 100).toFixed(1);
+    const ah = bka.monthlyHours[4];
+    const au = Math.round(ah / bka.proHoursMax * 100);
+    return `
+      <div class="bka-card ${st}">
+        <div class="card-top">
+          <div><div class="bka-name">${bka.name}</div><div class="bka-sub">${bka.type} · Mgr: ${bka.manager}</div></div>
+          <div class="status-pill pill-${st}">${STATUS_LABELS[st]}</div>
+        </div>
+        <div class="org-big">${bka.orgs}</div>
+        <div class="org-lbl">current orgs</div>
+        <div class="cap-bar-wrap">
+          <div class="cap-bar-bg"><div class="cap-bar-fill ${st}" style="width:${fp}%"></div></div>
+          <div class="cap-bar-lbls"><span>0</span><span>🟢 ${bka.healthyMax} (80%)</span><span>🔴 ${bka.stretchedMax} (100%)</span></div>
+        </div>
+        <div class="card-stats">
+          <div class="mini-s"><div class="mv">${bka.proHoursMax}h</div><div class="ml">Pro hrs budget/mo</div></div>
+          <div class="mini-s"><div class="mv">${ah}h</div><div class="ml">Apr hours used</div></div>
+          <div class="mini-s"><div class="mv" style="color:${utilColor(au)}">${au}%</div><div class="ml">Apr utilization</div></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════
+// PANEL 2 — TIME MODEL
+// ═══════════════════════════
+function renderUtilCards() {
+  document.getElementById('utilList').innerHTML = BKAS.map(bka => {
+    const d    = bka.last30d;
+    const hrs  = calcHours(bka);
+    const pct  = Math.round(hrs / bka.proHoursMax * 100);
+    const col  = utilColor(pct);
+    const nb   = Math.round(d.emails * (1-params.bulkPct));
+    const bk   = Math.round(d.emails * params.bulkPct);
+    return `
+      <div class="util-card">
+        <div class="util-top">
+          <div><div class="util-name">${bka.name}</div><div class="util-sub">${bka.type} · ${bka.proHoursMax}h budget/mo</div></div>
+          <div><div class="util-pct" style="color:${col}">${pct}%</div><div class="util-hrs">${hrs}h of ${bka.proHoursMax}h</div></div>
+        </div>
+        <div class="util-bar-bg"><div class="util-bar-fill" style="width:${Math.min(115,pct)}%;background:${col}"></div></div>
+        <div class="act-row">
+          <div class="act-cell"><span class="act-icon">📞</span><div class="act-ct">${d.calls}</div><div class="act-h">${fmt1(d.calls*params.call/60)}h</div><div class="act-lbl">calls</div></div>
+          <div class="act-cell"><span class="act-icon">🎥</span><div class="act-ct">${d.demos}</div><div class="act-h">${fmt1(d.demos*params.demo/60)}h</div><div class="act-lbl">zooms</div></div>
+          <div class="act-cell"><span class="act-icon">✉️</span><div class="act-ct">${nb}</div><div class="act-h">${fmt1(nb*params.email/60)}h</div><div class="act-lbl">non-bulk</div></div>
+          <div class="act-cell"><span class="act-icon">📧</span><div class="act-ct">${bk}</div><div class="act-h">${fmt1(bk*params.bulkEmail/60)}h</div><div class="act-lbl">bulk em.</div></div>
+          <div class="act-cell"><span class="act-icon">📱</span><div class="act-ct">${d.texts}</div><div class="act-h">${fmt1(d.texts*params.text/60)}h</div><div class="act-lbl">texts</div></div>
+          <div class="act-cell"><span class="act-icon">💬</span><div class="act-ct">${d.chats}</div><div class="act-h">${fmt1(d.chats*params.chat/60)}h</div><div class="act-lbl">chats</div></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function setParam(key, val) {
+  params[key] = parseFloat(val);
+  const el = document.getElementById('b-' + key);
+  if (el) el.textContent = key === 'bulkPct' ? Math.round(val*100) + '%' : Math.round(val) + ' min';
+  renderUtilCards();
+}
+
+// ═══════════════════════════
+// PANEL 3 — CHARTS
+// ═══════════════════════════
+function renderCharts() {
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trendChart').getContext('2d'), {
+    data: {
+      labels: MONTHS,
+      datasets: [
+        ...BKAS.map(b => ({ type:'bar', label:b.name.split(' ')[0], data:b.monthlyHours, backgroundColor:b.color+'bb', borderColor:b.color, borderWidth:1.5, borderRadius:4, order:2 })),
+        { type:'line', label:'Paired budget', data:Array(6).fill(124.7), borderColor:'#64748b', borderDash:[6,4], borderWidth:1.5, pointRadius:0, fill:false, order:1 },
+        { type:'line', label:'Solo budget',   data:Array(6).fill(63.9),  borderColor:'#94a3b8', borderDash:[3,3], borderWidth:1.5, pointRadius:0, fill:false, order:1 }
+      ]
+    },
+    options: {
+      responsive:true, interaction:{mode:'index',intersect:false},
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label:i=>i.datasetIndex<BKAS.length?` ${BKAS[i.datasetIndex].name.split(' ')[0]}: ${i.raw}h`:` ${i.dataset.label}: ${i.raw}h`}} },
+      scales: { x:{grid:{display:false}}, y:{title:{display:true,text:'Hours',font:{size:11}},suggestedMax:165,grid:{color:'#f1f5f9'}} }
+    }
+  });
+  document.getElementById('trendLegend').innerHTML =
+    BKAS.map(b=>`<div class="leg"><div class="leg-dot" style="background:${b.color}"></div>${b.name.split(' ')[0]}</div>`).join('') +
+    `<div class="leg"><svg width="18" height="9"><line x1="0" y1="4.5" x2="18" y2="4.5" stroke="#64748b" stroke-width="1.5" stroke-dasharray="5,3"/></svg>Paired budget</div>` +
+    `<div class="leg"><svg width="18" height="9"><line x1="0" y1="4.5" x2="18" y2="4.5" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,2"/></svg>Solo budget</div>`;
+
+  if (orgChart) orgChart.destroy();
+  orgChart = new Chart(document.getElementById('orgChart').getContext('2d'), {
+    type:'bar',
+    data: {
+      labels: BKAS.map(b=>b.name.split(' ')[0]+' '+(b.name.split(' ')[1]||'')),
+      datasets: [
+        { label:'Current Orgs', data:BKAS.map(b=>b.orgs),
+          backgroundColor:BKAS.map(b=>({healthy:'#86efac',stretched:'#fde68a',critical:'#fca5a5'}[getStatus(b)])),
+          borderColor:BKAS.map(b=>({healthy:'#16a34a',stretched:'#d97706',critical:'#dc2626'}[getStatus(b)])),
+          borderWidth:2, borderRadius:5 },
+        { type:'line', label:'80% threshold', data:BKAS.map(b=>b.healthyMax),
+          borderColor:'#16a34a', borderDash:[4,3], borderWidth:1.5,
+          pointRadius:4, pointBackgroundColor:'white', pointBorderColor:'#16a34a', fill:false }
+      ]
+    },
+    options: {
+      indexAxis:'y', responsive:true,
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label:i=>{
+        if(i.datasetIndex===1) return ` 80% healthy max: ${i.raw}`;
+        const b=BKAS[i.dataIndex];
+        return [` ${b.orgs} orgs · ${STATUS_LABELS[getStatus(b)]}`,` 🟢 ≤${b.healthyMax}  🔴 ≤${b.stretchedMax}`];
+      }}}},
+      scales: { x:{suggestedMax:380,grid:{color:'#f1f5f9'},title:{display:true,text:'Org Count',font:{size:11}}}, y:{grid:{display:false}} }
+    }
+  });
+}
+
+// ═══════════════════════════
+// TABS & INIT
+// ═══════════════════════════
+const TAB_IDS = ['org-load','time-model','trend'];
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TAB_IDS[i]===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if (id==='trend') setTimeout(renderCharts, 50);
+}
+
+renderOrgCards();
+renderUtilCards();
+setTimeout(loadFromWebApp, 300);
+</script>
+</body>
+</html>

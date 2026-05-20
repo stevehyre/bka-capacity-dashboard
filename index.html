@@ -83,18 +83,6 @@ body {
 .mini-s .mv { font-size: 14px; font-weight: 700; }
 .mini-s .ml { font-size: 9.5px; color: #64748b; margin-top: 1px; }
 
-/* ── View Toggle (Org Load) ── */
-.view-toggle-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-.view-toggle-bar span { font-size: 11px; color: #64748b; font-weight: 500; }
-.toggle-group { display: flex; background: #e2e8f0; border-radius: 8px; padding: 2px; gap: 2px; }
-.toggle-btn {
-  padding: 5px 14px; border-radius: 6px; font-size: 11.5px; font-weight: 600;
-  border: none; cursor: pointer; transition: all 0.15s;
-  background: transparent; color: #64748b;
-}
-.toggle-btn.active { background: white; color: #1d4ed8; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
-.pace-line { font-size: 10px; color: #64748b; margin-top: 3px; font-style: italic; }
-
 /* ── Panel 2: Time Model ── */
 .tm-layout { display: grid; grid-template-columns: 265px 1fr; gap: 18px; align-items: start; }
 .params-card {
@@ -124,13 +112,25 @@ input[type=range]::-webkit-slider-thumb {
 .util-hrs { font-size: 10px; color: #64748b; margin-top: 2px; text-align: right; }
 .util-bar-bg { background: #e2e8f0; height: 5px; border-radius: 99px; overflow: hidden; margin-bottom: 11px; }
 .util-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
-.act-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.act-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
 .act-cell { background: #f8fafc; border-radius: 7px; padding: 7px 3px; text-align: center; }
 .act-icon { font-size: 13px; display: block; margin-bottom: 2px; }
 .act-ct { font-size: 12px; font-weight: 700; }
 .act-ct-sub { font-size: 9.5px; color: #94a3b8; font-weight: 500; margin-top: 1px; }
 .act-h  { font-size: 9.5px; color: #2563eb; font-weight: 600; }
 .act-lbl { font-size: 9px; color: #94a3b8; margin-top: 1px; }
+
+/* ── View Toggle (Org Load) ── */
+.view-toggle-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.view-toggle-bar span { font-size: 11px; color: #64748b; font-weight: 500; }
+.toggle-group { display: flex; background: #e2e8f0; border-radius: 8px; padding: 2px; gap: 2px; }
+.toggle-btn {
+  padding: 5px 14px; border-radius: 6px; font-size: 11.5px; font-weight: 600;
+  border: none; cursor: pointer; transition: all 0.15s;
+  background: transparent; color: #64748b;
+}
+.toggle-btn.active { background: white; color: #1d4ed8; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.pace-line { font-size: 10px; color: #64748b; margin-top: 3px; font-style: italic; }
 .model-insight {
   background: #eff6ff; border-left: 3px solid #93c5fd; border-radius: 0 8px 8px 0;
   padding: 10px 14px; font-size: 11px; color: #1e40af; line-height: 1.55; margin-top: 12px;
@@ -228,6 +228,15 @@ const WEBAPP_URL = 'https://script.google.com/a/macros/housecallpro.com/s/AKfycb
           <div class="param-lbl">💬 Chat (Intercom)<span class="pbadge" id="b-chat">20 min</span></div>
           <input type="range" min="5" max="60" value="20" oninput="setParam('chat',+this.value)">
         </div>
+        <div class="sec-lbl">Support &amp; Operations</div>
+        <div class="param-row">
+          <div class="param-lbl">🎫 Support ticket<span class="pbadge" id="b-ticket">20 min</span></div>
+          <input type="range" min="5" max="60" value="20" oninput="setParam('ticket',+this.value)">
+        </div>
+        <div class="param-row">
+          <div class="param-lbl">🔓 Detach request<span class="pbadge" id="b-detach">20 min</span></div>
+          <input type="range" min="5" max="60" value="20" oninput="setParam('detach',+this.value)">
+        </div>
         <hr class="divider">
         <div class="note-sm">Activity counts from MBO Salesforce.<br>Auto-refreshed every Monday 7am CT.</div>
       </div>
@@ -264,32 +273,32 @@ const MONTHS = ['Dec 2025','Jan 2026','Feb 2026','Mar 2026','Apr 2026','May 2026
 
 let BKAS = [
   { name:'Kandyse Bertrand',      manager:'Karen', type:'Paired BA',         orgs:255, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:55,demos:43,emails:142,texts:31,chats:74},  mtd:{calls:34,demos:26,emails:87,texts:19,chats:45},
+    prevMonth:{calls:55,demos:43,emails:142,texts:31,chats:74,tickets:1,detaches:0},  mtd:{calls:34,demos:26,emails:87,texts:19,chats:45,tickets:7,detaches:0},
     monthlyHours:[102.9,61.5,64.7,61.0,79.8,24.7], color:'#3b82f6',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
   { name:'Lisa Horner',           manager:'Karen', type:'Paired BA',         orgs:245, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:35,demos:25,emails:242,texts:76,chats:95},  mtd:{calls:21,demos:15,emails:148,texts:46,chats:58},
+    prevMonth:{calls:35,demos:25,emails:242,texts:76,chats:95,tickets:0,detaches:0},  mtd:{calls:21,demos:15,emails:148,texts:46,chats:58,tickets:3,detaches:0},
     monthlyHours:[74.5,100.6,112.9,133.9,148.4,69.3], color:'#16a34a',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
   { name:'Soraya Volcy',          manager:'Judy',  type:'Paired BA',         orgs:270, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:44,demos:25,emails:322,texts:2,chats:108},  mtd:{calls:27,demos:15,emails:196,texts:1,chats:66},
+    prevMonth:{calls:44,demos:25,emails:322,texts:2,chats:108,tickets:1,detaches:0},  mtd:{calls:27,demos:15,emails:196,texts:1,chats:66,tickets:4,detaches:0},
     monthlyHours:[18.7,48.6,21.3,33.0,37.8,65.9],  color:'#a855f7',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
   { name:'Caleb Wireman',         manager:'Judy',  type:'Paired BA',         orgs:195, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:27,demos:12,emails:32,texts:28,chats:48},   mtd:{calls:16,demos:7,emails:20,texts:17,chats:29},
+    prevMonth:{calls:27,demos:12,emails:32,texts:28,chats:48,tickets:3,detaches:0},   mtd:{calls:16,demos:7,emails:20,texts:17,chats:29,tickets:5,detaches:0},
     monthlyHours:[15.5,22.9,38.7,20.8,20.1,40.5],  color:'#f97316',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
   { name:'Caitlin McManus',       manager:'Judy',  type:'Paired BA',         orgs:175, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:47,demos:15,emails:308,texts:36,chats:102}, mtd:{calls:29,demos:9,emails:188,texts:22,chats:62},
+    prevMonth:{calls:47,demos:15,emails:308,texts:36,chats:102,tickets:2,detaches:0}, mtd:{calls:29,demos:9,emails:188,texts:22,chats:62,tickets:4,detaches:0},
     monthlyHours:[57.9,64.8,38.2,36.1,64.8,55.7],  color:'#14b8a6',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
   { name:'Mauricio Pantoja Ramon',manager:'Karen', type:'Solo w/ team mgmt', orgs:167, proHoursMax:63.9,  healthyMax:132, stretchedMax:165, criticalAt:190,
-    prevMonth:{calls:41,demos:18,emails:122,texts:11,chats:57},  mtd:{calls:25,demos:11,emails:74,texts:7,chats:35},
+    prevMonth:{calls:41,demos:18,emails:122,texts:11,chats:57,tickets:1,detaches:0},  mtd:{calls:25,demos:11,emails:74,texts:7,chats:35,tickets:3,detaches:0},
     monthlyHours:[2.5,45.4,27.8,64.2,38.5,16.9],   color:'#ef4444',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' }
 ];
 
-const params = { call:10, demo:45, email:5, bulkEmail:1, bulkPct:0.30, text:2, chat:20 };
+const params = { call:10, demo:45, email:5, bulkEmail:1, bulkPct:0.30, text:2, chat:20, ticket:20, detach:20 };
 let trendChart = null, orgChart = null;
 let viewMode = 'mtd'; // 'mtd' | 'prev'
 
@@ -322,9 +331,9 @@ async function loadFromWebApp() {
 }
 
 function applyDashboardData(jsonData) {
-  const today       = new Date();
-  const daysElapsed = today.getDate();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const today      = new Date();
+  const daysElapsed  = today.getDate();
+  const daysInMonth  = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 
   BKAS.forEach(bka => {
     const entry = jsonData.bkas[bka.name];
@@ -338,26 +347,28 @@ function applyDashboardData(jsonData) {
     const mtdKey  = keys[keys.length - 1];
 
     function extractCounts(m) {
-      if (!m) return {calls:0,demos:0,emails:0,texts:0,chats:0};
+      if (!m) return {calls:0,demos:0,emails:0,texts:0,chats:0,tickets:0,detaches:0};
       return {
-        calls:  m.calls_connected || 0,
-        demos:  m.demos_attended  || 0,
-        emails: (m.emails_bulk || 0) + (m.emails_nonbulk || 0),
-        texts:  m.texts || 0,
-        chats:  m.chats || 0,
+        calls:    m.calls_connected  || 0,
+        demos:    m.demos_attended   || 0,
+        emails:   (m.emails_bulk || 0) + (m.emails_nonbulk || 0),
+        texts:    m.texts            || 0,
+        chats:    m.chats            || 0,
+        tickets:  m.support_tickets  || 0,
+        detaches: m.detach_requests  || 0,
       };
     }
 
     bka.prevMonth = extractCounts(entry.months[prevKey]);
     bka.mtd       = extractCounts(entry.months[mtdKey]);
 
-    // Human-readable labels from keys (format: "2026-04")
+    // Derive human-readable labels from the keys (format: "2026-04")
     const prevDate = new Date(prevKey + '-02');
     const mtdDate  = new Date(mtdKey  + '-02');
     bka.prevMonthLabel = prevDate.toLocaleString('default', {month:'short'});
     bka.mtdLabel       = mtdDate.toLocaleString('default', {month:'short'}) + ' MTD';
 
-    // Pace factor: project MTD to full month
+    // MTD pace: project to full month
     bka.paceFactor = daysElapsed > 0 ? daysInMonth / daysElapsed : 1;
   });
 
@@ -380,7 +391,7 @@ function getStatus(bka) {
 }
 const STATUS_LABELS = { healthy:'🟢 Healthy', stretched:'🟡 Stretched', critical:'🔴 Critical' };
 function calcHours(d) {
-  return +((d.calls*params.call + d.demos*params.demo + d.emails*(1-params.bulkPct)*params.email + d.emails*params.bulkPct*params.bulkEmail + d.texts*params.text + d.chats*params.chat) / 60).toFixed(1);
+  return +((d.calls*params.call + d.demos*params.demo + d.emails*(1-params.bulkPct)*params.email + d.emails*params.bulkPct*params.bulkEmail + d.texts*params.text + d.chats*params.chat + (d.tickets||0)*params.ticket + (d.detaches||0)*params.detach) / 60).toFixed(1);
 }
 function utilColor(p) { return p >= 100 ? '#dc2626' : p >= 80 ? '#d97706' : '#16a34a'; }
 function fmt1(n) { return (Math.round(n*10)/10).toFixed(1); }
@@ -400,9 +411,9 @@ function renderOrgCards() {
     const hrs  = calcHours(actData);
     const util = Math.round(hrs / bka.proHoursMax * 100);
 
-    // Pacing note (MTD mode only)
-    const pf       = bka.paceFactor || (31/19);
-    const paced    = isMtd ? +(hrs * pf).toFixed(1) : null;
+    // Pacing (only shown in MTD mode)
+    const pf    = bka.paceFactor || (31/19); // default mid-May if static
+    const paced = isMtd ? +(hrs * pf).toFixed(1) : null;
     const paceNote = paced !== null
       ? `<div class="pace-line">On pace for ${paced}h this month</div>` : '';
 
@@ -432,17 +443,17 @@ function renderOrgCards() {
 // ═══════════════════════════
 function renderUtilCards() {
   document.getElementById('utilList').innerHTML = BKAS.map(bka => {
-    const m   = bka.mtd;
-    const p   = bka.prevMonth;
-    const hrs = calcHours(m);
-    const pct = Math.round(hrs / bka.proHoursMax * 100);
-    const col = utilColor(pct);
-    const mnb = Math.round(m.emails * (1-params.bulkPct));
-    const mbk = Math.round(m.emails * params.bulkPct);
-    const pnb = Math.round(p.emails * (1-params.bulkPct));
-    const pbk = Math.round(p.emails * params.bulkPct);
-    const ml  = bka.mtdLabel       || 'MTD';
-    const pl  = bka.prevMonthLabel || 'Prev';
+    const m    = bka.mtd;
+    const p    = bka.prevMonth;
+    const hrs  = calcHours(m);
+    const pct  = Math.round(hrs / bka.proHoursMax * 100);
+    const col  = utilColor(pct);
+    const mnb  = Math.round(m.emails * (1-params.bulkPct));
+    const mbk  = Math.round(m.emails * params.bulkPct);
+    const pnb  = Math.round(p.emails * (1-params.bulkPct));
+    const pbk  = Math.round(p.emails * params.bulkPct);
+    const ml   = bka.mtdLabel       || 'MTD';
+    const pl   = bka.prevMonthLabel || 'Prev';
 
     function cell(icon, mVal, pVal, mHrs, lbl) {
       return `<div class="act-cell">
@@ -468,12 +479,14 @@ function renderUtilCards() {
         </div>
         <div class="util-bar-bg"><div class="util-bar-fill" style="width:${Math.min(115,pct)}%;background:${col}"></div></div>
         <div class="act-row">
-          ${cell('📞', m.calls, p.calls, m.calls*params.call/60, 'calls')}
-          ${cell('🎥', m.demos, p.demos, m.demos*params.demo/60, 'zooms')}
-          ${cell('✉️', mnb, pnb, mnb*params.email/60, 'non-bulk')}
-          ${cell('📧', mbk, pbk, mbk*params.bulkEmail/60, 'bulk em.')}
-          ${cell('📱', m.texts, p.texts, m.texts*params.text/60, 'texts')}
-          ${cell('💬', m.chats, p.chats, m.chats*params.chat/60, 'chats')}
+          ${cell('📞', m.calls,   p.calls,   m.calls*params.call/60,             'calls')}
+          ${cell('🎥', m.demos,   p.demos,   m.demos*params.demo/60,             'zooms')}
+          ${cell('✉️', mnb,       pnb,       mnb*params.email/60,                'non-bulk')}
+          ${cell('📧', mbk,       pbk,       mbk*params.bulkEmail/60,            'bulk em.')}
+          ${cell('📱', m.texts,   p.texts,   m.texts*params.text/60,             'texts')}
+          ${cell('💬', m.chats,   p.chats,   m.chats*params.chat/60,             'chats')}
+          ${cell('🎫', m.tickets||0, p.tickets||0, (m.tickets||0)*params.ticket/60, 'tickets')}
+          ${cell('🔓', m.detaches||0, p.detaches||0, (m.detaches||0)*params.detach/60, 'detaches')}
         </div>
       </div>`;
   }).join('');

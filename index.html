@@ -272,28 +272,28 @@ const WEBAPP_URL = 'https://script.google.com/a/macros/housecallpro.com/s/AKfycb
 const MONTHS = ['Dec 2025','Jan 2026','Feb 2026','Mar 2026','Apr 2026','May 2026*'];
 
 let BKAS = [
-  { name:'Kandyse Bertrand',      manager:'Karen', type:'Paired BA',         orgs:255, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:55,demos:43,emails:142,texts:31,chats:74,tickets:1,detaches:0},  mtd:{calls:34,demos:26,emails:87,texts:19,chats:45,tickets:7,detaches:0},
+  { name:'Kandyse Bertrand',      manager:'Karen', type:'Paired BA',         orgs:255, proHoursMax:124.7, healthyMax:299, stretchedMax:374, criticalAt:430,
+    prevMonth:{calls:55,demos:43,emails:142,texts:31,chats:74,tickets:1,detaches:13},  mtd:{calls:34,demos:26,emails:87,texts:19,chats:45,tickets:7,detaches:8},
     monthlyHours:[102.9,61.5,64.7,61.0,79.8,24.7], color:'#3b82f6',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
-  { name:'Lisa Horner',           manager:'Karen', type:'Paired BA',         orgs:245, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:35,demos:25,emails:242,texts:76,chats:95,tickets:0,detaches:2},  mtd:{calls:21,demos:15,emails:148,texts:46,chats:58,tickets:3,detaches:0},
+  { name:'Lisa Horner',           manager:'Karen', type:'Paired BA',         orgs:245, proHoursMax:124.7, healthyMax:299, stretchedMax:374, criticalAt:430,
+    prevMonth:{calls:35,demos:25,emails:242,texts:76,chats:95,tickets:0,detaches:19},  mtd:{calls:21,demos:15,emails:148,texts:46,chats:58,tickets:3,detaches:6},
     monthlyHours:[74.5,100.6,112.9,133.9,148.4,69.3], color:'#16a34a',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
-  { name:'Soraya Volcy',          manager:'Judy',  type:'Paired BA',         orgs:270, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:44,demos:25,emails:322,texts:2,chats:108,tickets:1,detaches:0},  mtd:{calls:27,demos:15,emails:196,texts:1,chats:66,tickets:4,detaches:2},
+  { name:'Soraya Volcy',          manager:'Judy',  type:'Paired BA',         orgs:270, proHoursMax:124.7, healthyMax:299, stretchedMax:374, criticalAt:430,
+    prevMonth:{calls:44,demos:25,emails:322,texts:2,chats:108,tickets:1,detaches:28},  mtd:{calls:27,demos:15,emails:196,texts:1,chats:66,tickets:4,detaches:13},
     monthlyHours:[18.7,48.6,21.3,33.0,37.8,65.9],  color:'#a855f7',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
-  { name:'Caleb Wireman',         manager:'Judy',  type:'Paired BA',         orgs:195, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:27,demos:12,emails:32,texts:28,chats:48,tickets:3,detaches:1},   mtd:{calls:16,demos:7,emails:20,texts:17,chats:29,tickets:5,detaches:0},
+  { name:'Caleb Wireman',         manager:'Judy',  type:'Paired BA',         orgs:195, proHoursMax:124.7, healthyMax:299, stretchedMax:374, criticalAt:430,
+    prevMonth:{calls:27,demos:12,emails:32,texts:28,chats:48,tickets:3,detaches:19},   mtd:{calls:16,demos:7,emails:20,texts:17,chats:29,tickets:5,detaches:10},
     monthlyHours:[15.5,22.9,38.7,20.8,20.1,40.5],  color:'#f97316',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
-  { name:'Caitlin McManus',       manager:'Judy',  type:'Paired BA',         orgs:175, proHoursMax:124.7, healthyMax:258, stretchedMax:323, criticalAt:371,
-    prevMonth:{calls:47,demos:15,emails:308,texts:36,chats:102,tickets:2,detaches:0}, mtd:{calls:29,demos:9,emails:188,texts:22,chats:62,tickets:4,detaches:1},
+  { name:'Caitlin McManus',       manager:'Judy',  type:'Paired BA',         orgs:175, proHoursMax:124.7, healthyMax:299, stretchedMax:374, criticalAt:430,
+    prevMonth:{calls:47,demos:15,emails:308,texts:36,chats:102,tickets:2,detaches:31}, mtd:{calls:29,demos:9,emails:188,texts:22,chats:62,tickets:4,detaches:13},
     monthlyHours:[57.9,64.8,38.2,36.1,64.8,55.7],  color:'#14b8a6',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' },
-  { name:'Mauricio Pantoja Ramon',manager:'Karen', type:'Solo w/ team mgmt', orgs:167, proHoursMax:63.9,  healthyMax:132, stretchedMax:165, criticalAt:190,
-    prevMonth:{calls:41,demos:18,emails:122,texts:11,chats:57,tickets:1,detaches:0},  mtd:{calls:25,demos:11,emails:74,texts:7,chats:35,tickets:3,detaches:0},
+  { name:'Mauricio Pantoja Ramon',manager:'Karen', type:'Solo w/ team mgmt', orgs:167, proHoursMax:63.9,  healthyMax:153, stretchedMax:192, criticalAt:220,
+    prevMonth:{calls:41,demos:18,emails:122,texts:11,chats:57,tickets:1,detaches:15},  mtd:{calls:25,demos:11,emails:74,texts:7,chats:35,tickets:3,detaches:5},
     monthlyHours:[2.5,45.4,27.8,64.2,38.5,16.9],   color:'#ef4444',
     prevMonthLabel:'Apr', mtdLabel:'May MTD' }
 ];
@@ -546,7 +546,7 @@ function renderCharts() {
         const b=BKAS[i.dataIndex];
         return [` ${b.orgs} orgs · ${STATUS_LABELS[getStatus(b)]}`,` 🟢 ≤${b.healthyMax}  🔴 ≤${b.stretchedMax}`];
       }}}},
-      scales: { x:{suggestedMax:380,grid:{color:'#f1f5f9'},title:{display:true,text:'Org Count',font:{size:11}}}, y:{grid:{display:false}} }
+      scales: { x:{suggestedMax:450,grid:{color:'#f1f5f9'},title:{display:true,text:'Org Count',font:{size:11}}}, y:{grid:{display:false}} }
     }
   });
 }
